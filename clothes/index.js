@@ -1,5 +1,4 @@
 require('./clothes');
-
 const typeToComponent = new Map([
 	['Верх', 11],
 	['Торс', 11],
@@ -142,6 +141,9 @@ function getComponentsFromClothes(gender, layers) {
 			const undershirtId = (male ? topToUndershirtMale : topToUndershirtFemale).get(shirtItem.drawableId);
 			if (typeof undershirtId === 'number') {
 				components.set(8, [undershirtId, shirtItem.textureId]);
+				if (shirtItem.neck === 'neck_open' && jacketItem.sleeve === 'sleeve_long') {
+					components.set(3, [male ? 6 : 7, 0]);
+				}
 			} else {
 				// Дефолтный универсальный undershirt
 				components.set(8, [male ? 1 : 0, 1]);
@@ -168,7 +170,7 @@ function getComponentsFromClothes(gender, layers) {
 		components.set(11, [shirtItem.drawableId, shirtItem.textureId]);
 		// Выбор торса для длины рукавов
 		components.set(3, [sleeveToTorso.get(shirtItem.sleeve)[gender], 0]);
-		if (shirtItem.neck === 'neck_open' && shirtItem.sleeve === 'sleeve_long') {
+		if (shirtItem.neck === 'neck_open' && shirtItem.sleeve === 'sleeve_none') {
 			components.set(3, [male ? 5 : 12, 0]);
 		}
 		// Открытый живот
@@ -290,7 +292,7 @@ mp.events.addCommand('wear', (player, cmd, ...args) => {
 
 	const [components, props] = getComponentsFromClothes(playerGender, debugLayers);
 	showClothesOnPlayer(player, components, props);
-	player.outputChatBox(`Примерка: надета вещь "clothes_${layer}${gender ? gender : ''}_${item.drawableId}_${item.textureId}"`);
+	player.outputChatBox(`Примерка: надета вещь "${pName}" на слой ${layer}`);
 });
 
 mp.events.addCommand('unwear', (player) => {
@@ -323,5 +325,6 @@ mp.events.addCommand('help', (player) => {
 	player.outputChatBox(`/comp componentId drawableId textureId - тест компонента`);
 	player.outputChatBox(`/prop propId drawableId textureId - тест пропа`);
 });
+
 
 console.log('Clothes editor loaded');
