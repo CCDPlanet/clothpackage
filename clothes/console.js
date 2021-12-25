@@ -18,10 +18,12 @@ consoleEface.on('line', (cmd) => {
 			h(...cargs);
 		}
 	} else {
-		consoleEface.write(`unknown command: ${cname}`);
+		console.error(`unknown command: ${cname}`);
 	}
 	consoleEface.prompt();
 })
+
+consoleEface.prompt();
 
 function addCCommand(cmd, h) {
 	let hs = chandlers.get(cmd);
@@ -32,8 +34,6 @@ function addCCommand(cmd, h) {
 
 	hs.push(h);
 }
-
-consoleEface.prompt();
 
 module.exports = {
 	addCCommand,

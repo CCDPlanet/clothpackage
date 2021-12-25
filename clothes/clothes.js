@@ -78,7 +78,12 @@ addCCommand('clothes', async (...cargs) => {
 		const dir = await fs.opendir(dirname);
 		console.info('чтение файлов из директории clothes/ ...');
 		let i = 0;
+		const dirents = [];
 		for await (const dirent of dir) {
+			dirents.push(dirent);
+		}
+		dirents.sort((a, b) => (a.name > b.name ? -1 : 1) * Math.sign(shift));
+		for (const dirent of dirents) {
 			if (!dirent.isFile()) {
 				continue;
 			}
@@ -93,8 +98,13 @@ addCCommand('clothes', async (...cargs) => {
 			}
 			const entpath = path.join(dir.path, dirent.name);
 			const newentpath = path.join(dir.path, entstr(rageent));
-			fs.rename(entpath, newentpath)
-			i++
+			try {
+				await fs.access(newentpath)
+				console.warn(`невозможно переименовать файл ${entpath} в ${newentpath}: конечный файл уже существует, пропуск`);
+			} catch (err) {
+				await fs.rename(entpath, newentpath)
+				i++
+			}
 		}
 		console.info(`переименовано ${i} файла(ов).`);
 	} catch (err) {
