@@ -40,7 +40,7 @@ const topToUndershirtMale = new Map([
 
 const topToUndershirtFemale = new Map([
 	[0, 0],
-	[2, 26],
+	// [2, 26], - не поддерживаются все цвета
 	[11, 11],
 	[19, 18],
 	[22, 22],
@@ -59,6 +59,8 @@ const sleeveToTorso = new Map([
 	['sleeve_long', [3, 1]],
 	['sleeve_elbow', [1, 0]],
 	['sleeve_none', [4, 2]],
+	['sleeve_shoulder', [9, 0]],
+	['sleeve_upper', [14, 0]],
 ])
 
 let clothesItems = {}
@@ -135,6 +137,12 @@ function getComponentsFromClothes(gender, layers) {
 		components.set(11, [jacketItem.drawableId, jacketItem.textureId]);
 		// Выбор торса для длины рукавов
 		components.set(3, [sleeveToTorso.get(jacketItem.sleeve)[gender], 0]);
+		if (!male && jacketItem.neck === 'neck_side') {
+			components.set(3, [2, 0]);
+		}
+		if (!male && jacketItem.neck === 'neck_dress') {
+			components.set(3, [11, 0]);
+		}
 
 		// Отображение футболки или торса под расстегнутой курткой
 		if (shirtItem && jacketItem.torso === 'torso_open') {
@@ -146,7 +154,7 @@ function getComponentsFromClothes(gender, layers) {
 				// Дефолтный универсальный undershirt
 				components.set(8, [male ? 1 : 0, male ? 1 : 2]);
 			}
-			if (shirtItem.neck === 'neck_open' && jacketItem.sleeve === 'sleeve_long') {
+			if ((shirtItem.neck === 'neck_open' || shirtItem.neck == 'neck_side' || (!male && typeof undershirtId !== 'number')) && jacketItem.sleeve === 'sleeve_long') {
 				components.set(3, [male ? 6 : 7, 0]);
 			}
 		} else { // Футболка не надета
@@ -194,6 +202,10 @@ function getComponentsFromClothes(gender, layers) {
 
 		if (typeof shirtItem.undershirtId === 'number') {
 			components.set(8, [shirtItem.undershirtId, shirtItem.undershirtTextureId || 0]);
+		}
+
+		if (!male && shirtItem.neck === 'neck_side') {
+			components.set(3, [2, 0]);
 		}
 	}
 
@@ -244,6 +256,8 @@ const pSleeveMap = new Map([
 	['До запястья', 'sleeve_long'],
 	['До локтя', 'sleeve_elbow'],
 	['Без рукавов', 'sleeve_none'],
+	['До плеча', 'sleeve_shoulder'],
+	['До верха плеча (жен.)', 'sleeve_upper'],
 ]);
 
 const pTorsoMap = new Map([
@@ -255,6 +269,8 @@ const pTorsoMap = new Map([
 const pNeckMap = new Map([
 	['Обычный', 'neck_closed'],
 	['Большой', 'neck_open'],
+	['Одно плечо (жен.)', 'neck_side'],
+	['Платье (жен.)', 'neck_dress'],
 ]);
 
 mp.events.addCommand('wear', (player, cmd, ...args) => {
@@ -335,6 +351,22 @@ mp.events.addCommand('prop', (player, cmd, component, drawable, texture) => {
 	player.setProp(parseInt(component), parseInt(drawable), parseInt(texture));
 });
 
+mp.events.addCommand('listcomp', (player) => {
+	const playerGender = player.model === mp.joaat('mp_f_freemode_01') ? 0 : 1;
+	const [components] = getComponentsFromClothes(playerGender, debugLayers);
+	components.forEach(([drawableId, textureId], componentId) => {
+		player.outputChatBox(`${componentId} = drawableId: ${drawableId}, textureId: ${textureId}`);
+	});
+});
+
+mp.events.addCommand('listprop', (player) => {
+	const playerGender = player.model === mp.joaat('mp_f_freemode_01') ? 0 : 1;
+	const [_, props] = getComponentsFromClothes(playerGender, debugLayers);
+	props.forEach(([drawableId, textureId], componentId) => {
+		player.outputChatBox(`${componentId} = drawableId: ${drawableId}, textureId: ${textureId}`);
+	});
+});
+
 mp.events.addCommand('gender', (player, cmd, gender) => {
 	if (gender === '1') {
 		player.model = mp.joaat('mp_m_freemode_01');
@@ -345,13 +377,12 @@ mp.events.addCommand('gender', (player, cmd, gender) => {
 
 
 mp.events.addCommand('help', (player) => {
-	player.outputChatBox('Примерка одежды:');
+	player.outputChatBox('/gender 0 или 1 - выбрать пол');
 	player.outputChatBox(`/wear <строка из таблицы> - примерить одежду`);
 	player.outputChatBox(`/unwear - снять всю одежду`);
-	player.outputChatBox(' ');
-	player.outputChatBox('Проверка вещей по ID:');
 	player.outputChatBox(`/comp componentId drawableId textureId - тест компонента`);
 	player.outputChatBox(`/prop propId drawableId textureId - тест пропа`);
+	player.outputChatBox(`/liscomp - список компонентов на персонаже`);
 });
 
 
