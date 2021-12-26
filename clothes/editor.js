@@ -57,8 +57,9 @@ const sleeveToTorso = new Map([
 	['sleeve_long', [3, 1]],
 	['sleeve_elbow', [1, 0]],
 	['sleeve_none', [4, 2]],
-	['sleeve_shoulder', [9, 0]],
-	['sleeve_upper', [14, 0]],
+	['sleeve_shoulder', [9, 0]], // Только для женщин
+	['sleeve_upper', [14, 0]], // Только для женщин
+	['sleeve_short', [0, 0]], // Только для женщин
 ])
 
 let clothesItems = {}
@@ -259,6 +260,7 @@ const pSleeveMap = new Map([
 	['Без рукавов', 'sleeve_none'],
 	['До плеча', 'sleeve_shoulder'],
 	['До верха плеча (жен.)', 'sleeve_upper'],
+	['Очень короткие (жен.)', 'sleeve_short'],
 ]);
 
 const pTorsoMap = new Map([
