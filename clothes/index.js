@@ -1,4 +1,5 @@
 require('./clothes');
+
 const typeToComponent = new Map([
 	['Верх', 11],
 	['Торс', 11],
@@ -85,7 +86,7 @@ function getComponentsFromClothes(gender, layers) {
 	components.set(5, [0, 0]); // Сумка
 	components.set(6, [male ? 34 : 35, 0]); // Обувь
 	components.set(7, [0, 0]); // Аксессуар
-	components.set(8, [15, 0]); // Undershirt
+	components.set(8, [male ? 15 : 6, 0]); // Undershirt
 	components.set(9, [0, 0]); // Body Armors (и бейджики)
 	components.set(10, [0, 0]); // Decals
 	components.set(11, [15, 0]); // Tops
@@ -141,21 +142,34 @@ function getComponentsFromClothes(gender, layers) {
 			const undershirtId = (male ? topToUndershirtMale : topToUndershirtFemale).get(shirtItem.drawableId);
 			if (typeof undershirtId === 'number') {
 				components.set(8, [undershirtId, shirtItem.textureId]);
-				if (shirtItem.neck === 'neck_open' && jacketItem.sleeve === 'sleeve_long') {
-					components.set(3, [male ? 6 : 7, 0]);
-				}
 			} else {
 				// Дефолтный универсальный undershirt
-				components.set(8, [male ? 1 : 0, 1]);
+				components.set(8, [male ? 1 : 0, male ? 1 : 2]);
+			}
+			if (shirtItem.neck === 'neck_open' && jacketItem.sleeve === 'sleeve_long') {
+				components.set(3, [male ? 6 : 7, 0]);
 			}
 		} else { // Футболка не надета
 			if (jacketItem.torso === 'torso_partial') {
 				components.set(8, [male ? 14 : 1, 1]);
+				if (!male && jacketItem.sleeve === 'sleeve_long') {
+					components.set(3, [7, 0]);
+					components.set(8, [15, 0]);
+				}
+
+				if (!male && shirtItem) {
+					components.set(8, [1, 2]);
+				}
 			} else if (jacketItem.torso === 'torso_open') {
 				if (jacketItem.sleeve === 'sleeve_long') {
-					components.set(3, [male ? 14 : 5, 0]);
+					components.set(3, [male ? 14 : 6, 0]);
 				} else {
 					components.set(8, [male ? 1 : 0, 1]);
+				}
+
+				if (!male && jacketItem.sleeve == 'sleeve_elbow') {
+					components.set(3, [5, 0]);
+					components.set(8, [15, 0]);
 				}
 			}
 		}
@@ -265,9 +279,14 @@ mp.events.addCommand('wear', (player, cmd, ...args) => {
 	const playerGender = player.model === mp.joaat('mp_f_freemode_01') ? 0 : 1;
 
 	const gender = pGender ? (pGender.includes('Муж') ? 1 : 0) : null;
+	if (gender !== null && gender !== playerGender) {
+		player.outputChatBox(`Пол не совпадает`);
+		return;
+	}
 	const layer = pLayersMap.get(pLayer);
 	if (!layer) {
 		player.outputChatBox(`Неизвестный тип "${pLayer}"`);
+		return;
 	}
 	const item = {
 		gender,
@@ -315,6 +334,15 @@ mp.events.addCommand('prop', (player, cmd, component, drawable, texture) => {
 	player.outputChatBox(`Проп: ${component}; drawableId: ${drawable}; textureId: ${texture}`);
 	player.setProp(parseInt(component), parseInt(drawable), parseInt(texture));
 });
+
+mp.events.addCommand('gender', (player, cmd, gender) => {
+	if (gender === '1') {
+		player.model = mp.joaat('mp_m_freemode_01');
+	} else {
+		player.model = mp.joaat('mp_f_freemode_01');
+	}
+});
+
 
 mp.events.addCommand('help', (player) => {
 	player.outputChatBox('Примерка одежды:');
